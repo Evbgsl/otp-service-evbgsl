@@ -38,6 +38,8 @@ public class OtpService {
 
         DeliveryChannel deliveryChannel = parseDeliveryChannel(request.getDeliveryChannel());
 
+        validateDestination(deliveryChannel, request.getDestination());
+
         OtpConfig config = otpConfigDao.getConfig();
 
         String code = generateNumericCode(config.getCodeLength());
@@ -57,7 +59,12 @@ public class OtpService {
             throw new IllegalArgumentException("Unsupported delivery channel: " + deliveryChannel);
         }
 
-        notificationService.sendCode(user, request.getOperationId(), code);
+        notificationService.sendCode(
+                user,
+                request.getOperationId(),
+                code,
+                request.getDestination()
+        );
 
         return new OtpGenerateResponse(
                 request.getOperationId(),
@@ -134,5 +141,17 @@ public class OtpService {
         }
 
         return code.toString();
+    }
+
+    private void validateDestination(DeliveryChannel deliveryChannel, String destination) {
+        if (deliveryChannel == DeliveryChannel.EMAIL) {
+            if (destination == null || destination.isBlank()) {
+                throw new IllegalArgumentException("Email destination is required");
+            }
+
+            if (!destination.contains("@")) {
+                throw new IllegalArgumentException("Invalid email destination");
+            }
+        }
     }
 }

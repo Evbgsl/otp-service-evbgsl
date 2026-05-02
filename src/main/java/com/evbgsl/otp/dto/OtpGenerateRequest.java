@@ -4,6 +4,7 @@ public class OtpGenerateRequest {
 
     private String operationId;
     private String deliveryChannel;
+    private String destination;
 
     public String getOperationId() {
         return operationId;
@@ -11,5 +12,9 @@ public class OtpGenerateRequest {
 
     public String getDeliveryChannel() {
         return deliveryChannel;
+    }
+
+    public String getDestination() {
+        return destination;
     }
 }
