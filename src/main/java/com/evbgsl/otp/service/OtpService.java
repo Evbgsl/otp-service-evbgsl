@@ -187,5 +187,15 @@ public class OtpService {
                 throw new IllegalArgumentException("Invalid Telegram chat id");
             }
         }
+
+        if (deliveryChannel == DeliveryChannel.SMS) {
+            if (destination == null || destination.isBlank()) {
+                throw new IllegalArgumentException("SMS destination is required");
+            }
+
+            if (!destination.matches("\\d{10,15}")) {
+                throw new IllegalArgumentException("Invalid SMS destination");
+            }
+        }
     }
 }
