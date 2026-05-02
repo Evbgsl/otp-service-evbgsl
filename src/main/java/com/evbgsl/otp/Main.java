@@ -2,11 +2,22 @@ package com.evbgsl.otp;
 
 import com.evbgsl.otp.api.HealthHandler;
 import com.evbgsl.otp.api.HttpServerProvider;
+import com.evbgsl.otp.dao.OtpConfigDao;
+import com.evbgsl.otp.model.OtpConfig;
+import com.evbgsl.otp.util.SchemaInitializer;
 import com.sun.net.httpserver.HttpServer;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
+        SchemaInitializer.init();
+
+        OtpConfigDao otpConfigDao = new OtpConfigDao();
+        OtpConfig config = otpConfigDao.getConfig();
+
+        System.out.println("OTP config: length=" + config.getCodeLength()
+                + ", ttlSeconds=" + config.getTtlSeconds());
+
         int port = 8080;
 
         HttpServer server = HttpServerProvider.create(port);
