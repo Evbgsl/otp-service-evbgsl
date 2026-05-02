@@ -1,6 +1,8 @@
 package com.evbgsl.otp.api;
 
 import com.evbgsl.otp.dto.ApiResponse;
+import com.evbgsl.otp.dto.LoginRequest;
+import com.evbgsl.otp.dto.LoginResponse;
 import com.evbgsl.otp.dto.RegisterRequest;
 import com.evbgsl.otp.service.AuthService;
 import com.evbgsl.otp.util.JsonUtil;
@@ -29,10 +31,17 @@ public class AuthHandler implements HttpHandler {
                 return;
             }
 
+            if ("POST".equalsIgnoreCase(method) && "/api/auth/login".equals(path)) {
+                handleLogin(exchange);
+                return;
+            }
+
             ResponseUtil.sendJson(exchange, 404, new ApiResponse("Not found"));
 
         } catch (IllegalArgumentException e) {
             ResponseUtil.sendJson(exchange, 400, new ApiResponse(e.getMessage()));
+        } catch (SecurityException e) {
+            ResponseUtil.sendJson(exchange, 403, new ApiResponse(e.getMessage()));
         } catch (Exception e) {
             ResponseUtil.sendJson(exchange, 500, new ApiResponse("Internal server error"));
         }
@@ -44,5 +53,13 @@ public class AuthHandler implements HttpHandler {
         authService.register(request);
 
         ResponseUtil.sendJson(exchange, 201, new ApiResponse("User registered successfully"));
+    }
+
+    private void handleLogin(HttpExchange exchange) throws IOException {
+        LoginRequest request = JsonUtil.fromJson(exchange.getRequestBody(), LoginRequest.class);
+
+        LoginResponse response = authService.login(request);
+
+        ResponseUtil.sendJson(exchange, 200, response);
     }
 }
