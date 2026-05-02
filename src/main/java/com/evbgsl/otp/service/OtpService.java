@@ -12,11 +12,16 @@ import com.evbgsl.otp.model.OtpStatus;
 import com.evbgsl.otp.model.User;
 import com.evbgsl.otp.notification.NotificationService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
 
 public class OtpService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OtpService.class);
 
     private final OtpCodeDao otpCodeDao;
     private final OtpConfigDao otpConfigDao;
@@ -66,6 +71,11 @@ public class OtpService {
                 request.getDestination()
         );
 
+        logger.info("OTP delivery completed: userId={}, operationId={}, channel={}",
+                user.getId(),
+                request.getOperationId(),
+                deliveryChannel);
+
         return new OtpGenerateResponse(
                 request.getOperationId(),
                 code,
@@ -87,14 +97,26 @@ public class OtpService {
 
         if (otpCode.isExpired()) {
             otpCodeDao.markExpired(otpCode.getId());
+            logger.warn("OTP expired during validation: otpId={}, userId={}, operationId={}",
+                    otpCode.getId(),
+                    user.getId(),
+                    request.getOperationId());
             throw new IllegalArgumentException("OTP code expired");
         }
 
         if (!otpCode.getCode().equals(request.getCode())) {
+            logger.warn("Invalid OTP validation attempt: userId={}, operationId={}",
+                    user.getId(),
+                    request.getOperationId());
             throw new IllegalArgumentException("Invalid OTP code");
         }
 
         otpCodeDao.markUsed(otpCode.getId());
+
+        logger.info("OTP marked as USED: otpId={}, userId={}, operationId={}",
+                otpCode.getId(),
+                user.getId(),
+                request.getOperationId());
     }
 
     private void validateGenerateRequest(OtpGenerateRequest request) {

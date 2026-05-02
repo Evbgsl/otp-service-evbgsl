@@ -8,7 +8,12 @@ import com.evbgsl.otp.model.Role;
 import com.evbgsl.otp.model.User;
 import com.evbgsl.otp.util.PasswordUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     private final UserDao userDao;
     private final TokenService tokenService;
@@ -35,6 +40,7 @@ public class AuthService {
         String passwordHash = PasswordUtil.hash(request.getPassword());
 
         userDao.create(request.getLogin(), passwordHash, role);
+        logger.info("User registered: login={}, role={}", request.getLogin(), role);
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -51,6 +57,10 @@ public class AuthService {
         }
 
         String token = tokenService.generateToken(user);
+        logger.info("User logged in: userId={}, login={}, role={}",
+                user.getId(),
+                user.getLogin(),
+                user.getRole());
 
         return new LoginResponse(token, tokenService.getTokenTtlSeconds());
     }

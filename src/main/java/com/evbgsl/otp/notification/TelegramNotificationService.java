@@ -11,7 +11,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TelegramNotificationService implements NotificationService {
+    private static final Logger logger = LoggerFactory.getLogger(TelegramNotificationService.class);
 
     private final String botToken;
     private final String telegramApiUrl;
@@ -55,6 +59,10 @@ public class TelegramNotificationService implements NotificationService {
                 + urlEncode(text);
 
         sendTelegramRequest(url);
+        logger.info("OTP Telegram delivery completed: userId={}, operationId={}, chatId={}",
+                user.getId(),
+                operationId,
+                destination);
     }
 
     private void sendTelegramRequest(String url) {
@@ -70,16 +78,21 @@ public class TelegramNotificationService implements NotificationService {
             );
 
             if (response.statusCode() != 200) {
-                throw new RuntimeException("Telegram API error. Status code: "
-                        + response.statusCode()
-                        + ", body: "
-                        + response.body());
+                logger.warn("Telegram API returned error: statusCode={}, body={}",
+                        response.statusCode(),
+                        response.body());
+
+                throw new RuntimeException("Telegram API error. Status code: " + response.statusCode());
             }
+
+            logger.info("OTP Telegram message sent successfully");
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            logger.error("Telegram sending interrupted", e);
             throw new RuntimeException("Telegram sending interrupted", e);
         } catch (Exception e) {
+            logger.error("Failed to send OTP code by Telegram", e);
             throw new RuntimeException("Failed to send OTP code by Telegram", e);
         }
     }
