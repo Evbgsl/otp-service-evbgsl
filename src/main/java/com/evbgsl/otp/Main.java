@@ -12,6 +12,7 @@ import com.evbgsl.otp.dao.UserDao;
 import com.evbgsl.otp.model.OtpConfig;
 import com.evbgsl.otp.service.AdminService;
 import com.evbgsl.otp.service.AuthService;
+import com.evbgsl.otp.service.ExpirationService;
 import com.evbgsl.otp.service.OtpService;
 import com.evbgsl.otp.service.TokenService;
 import com.evbgsl.otp.util.SchemaInitializer;
@@ -35,6 +36,9 @@ public class Main {
         AuthService authService = new AuthService(userDao, tokenService);
         AdminService adminService = new AdminService(userDao, otpConfigDao);
         OtpService otpService = new OtpService(otpCodeDao, otpConfigDao);
+
+        ExpirationService expirationService = new ExpirationService(otpCodeDao);
+        expirationService.start();
 
         int port = 8080;
 
