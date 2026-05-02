@@ -10,9 +10,14 @@ import com.evbgsl.otp.util.ResponseUtil;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 public class AuthHandler implements HttpHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthHandler.class);
 
     private final AuthService authService;
 
@@ -22,6 +27,10 @@ public class AuthHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        logger.info("Incoming auth request: method={}, path={}",
+                exchange.getRequestMethod(),
+                exchange.getRequestURI().getPath());
+
         try {
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
@@ -31,18 +40,25 @@ public class AuthHandler implements HttpHandler {
                 return;
             }
 
+            logger.info("User registration request completed successfully");
+
             if ("POST".equalsIgnoreCase(method) && "/api/auth/login".equals(path)) {
                 handleLogin(exchange);
                 return;
             }
 
+            logger.info("User login request completed successfully");
+
             ResponseUtil.sendJson(exchange, 404, new ApiResponse("Not found"));
 
         } catch (IllegalArgumentException e) {
+            logger.warn("Auth request failed: {}", e.getMessage());
             ResponseUtil.sendJson(exchange, 400, new ApiResponse(e.getMessage()));
         } catch (SecurityException e) {
+            logger.warn("Auth request forbidden: {}", e.getMessage());
             ResponseUtil.sendJson(exchange, 403, new ApiResponse(e.getMessage()));
         } catch (Exception e) {
+            logger.error("Unexpected auth request error", e);
             ResponseUtil.sendJson(exchange, 500, new ApiResponse("Internal server error"));
         }
     }

@@ -9,7 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FileNotificationService implements NotificationService {
+    private static final Logger logger = LoggerFactory.getLogger(FileNotificationService.class);
 
     private static final Path FILE_PATH = Path.of("otp-codes.txt");
 
@@ -32,7 +36,16 @@ public class FileNotificationService implements NotificationService {
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND
             );
+
+            logger.info("OTP code written to file: userId={}, operationId={}",
+                    user.getId(),
+                    operationId);
+
         } catch (IOException e) {
+            logger.error("Failed to write OTP code to file: userId={}, operationId={}",
+                    user.getId(),
+                    operationId,
+                    e);
             throw new RuntimeException("Failed to write OTP code to file", e);
         }
     }

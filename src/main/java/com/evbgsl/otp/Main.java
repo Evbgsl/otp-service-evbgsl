@@ -22,10 +22,14 @@ import com.evbgsl.otp.service.OtpService;
 import com.evbgsl.otp.service.TokenService;
 import com.evbgsl.otp.util.SchemaInitializer;
 import com.sun.net.httpserver.HttpServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class Main {
+
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws Exception {
         SchemaInitializer.init();
@@ -78,6 +82,10 @@ public class Main {
 
         server.start();
 
-        System.out.println("OTP Service started on port " + port);
+        logger.info("Database schema initialized");
+        logger.info("OTP config loaded: length={}, ttlSeconds={}",
+                config.getCodeLength(),
+                config.getTtlSeconds());
+        logger.info("OTP Service started on port {}", port);
     }
 }

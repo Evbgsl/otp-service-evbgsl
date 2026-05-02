@@ -6,7 +6,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ExpirationService {
+    private static final Logger logger = LoggerFactory.getLogger(ExpirationService.class);
 
     private static final long INITIAL_DELAY_SECONDS = 5;
     private static final long CHECK_INTERVAL_SECONDS = 10;
@@ -25,6 +29,8 @@ public class ExpirationService {
     }
 
     public void start() {
+        logger.info("OTP expiration service started");
+
         scheduler.scheduleAtFixedRate(
                 this::expireCodesSafely,
                 INITIAL_DELAY_SECONDS,
@@ -44,11 +50,11 @@ public class ExpirationService {
             int expiredCount = otpCodeDao.markExpiredCodes();
 
             if (expiredCount > 0) {
-                System.out.println("Expired OTP codes: " + expiredCount);
+                logger.info("Expired OTP codes: count={}", expiredCount);
             }
 
         } catch (Exception e) {
-            System.err.println("Failed to expire OTP codes: " + e.getMessage());
+            logger.error("Failed to expire OTP codes", e);
         }
     }
 }

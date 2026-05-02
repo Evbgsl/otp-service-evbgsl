@@ -10,10 +10,15 @@ import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.InputStream;
 import java.util.Properties;
 
 public class EmailNotificationService implements NotificationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmailNotificationService.class);
 
     private final String username;
     private final String password;
@@ -56,7 +61,17 @@ public class EmailNotificationService implements NotificationService {
 
             Transport.send(message);
 
+            logger.info("OTP email sent: userId={}, operationId={}, destination={}",
+                    user.getId(),
+                    operationId,
+                    destination);
+
         } catch (MessagingException e) {
+            logger.error("Failed to send OTP email: userId={}, operationId={}, destination={}",
+                    user.getId(),
+                    operationId,
+                    destination,
+                    e);
             throw new RuntimeException("Failed to send OTP code by email", e);
         }
     }
