@@ -153,5 +153,17 @@ public class OtpService {
                 throw new IllegalArgumentException("Invalid email destination");
             }
         }
+
+        if (deliveryChannel == DeliveryChannel.TELEGRAM) {
+            if (destination == null || destination.isBlank()) {
+                throw new IllegalArgumentException("Telegram chat id is required");
+            }
+
+            try {
+                Long.parseLong(destination);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid Telegram chat id");
+            }
+        }
     }
 }
