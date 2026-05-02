@@ -1,9 +1,12 @@
 package com.evbgsl.otp;
 
+import com.evbgsl.otp.api.AuthHandler;
 import com.evbgsl.otp.api.HealthHandler;
 import com.evbgsl.otp.api.HttpServerProvider;
 import com.evbgsl.otp.dao.OtpConfigDao;
+import com.evbgsl.otp.dao.UserDao;
 import com.evbgsl.otp.model.OtpConfig;
+import com.evbgsl.otp.service.AuthService;
 import com.evbgsl.otp.util.SchemaInitializer;
 import com.sun.net.httpserver.HttpServer;
 
@@ -18,10 +21,16 @@ public class Main {
         System.out.println("OTP config: length=" + config.getCodeLength()
                 + ", ttlSeconds=" + config.getTtlSeconds());
 
+        UserDao userDao = new UserDao();
+        AuthService authService = new AuthService(userDao);
+
         int port = 8080;
 
         HttpServer server = HttpServerProvider.create(port);
+
         server.createContext("/health", new HealthHandler());
+        server.createContext("/api/auth/register", new AuthHandler(authService));
+
         server.start();
 
         System.out.println("OTP Service started on port " + port);
