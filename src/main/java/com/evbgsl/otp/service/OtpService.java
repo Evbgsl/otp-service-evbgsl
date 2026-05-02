@@ -5,27 +5,38 @@ import com.evbgsl.otp.dao.OtpConfigDao;
 import com.evbgsl.otp.dto.OtpGenerateRequest;
 import com.evbgsl.otp.dto.OtpGenerateResponse;
 import com.evbgsl.otp.dto.OtpValidateRequest;
+import com.evbgsl.otp.model.DeliveryChannel;
 import com.evbgsl.otp.model.OtpCode;
 import com.evbgsl.otp.model.OtpConfig;
 import com.evbgsl.otp.model.OtpStatus;
 import com.evbgsl.otp.model.User;
+import com.evbgsl.otp.notification.NotificationService;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class OtpService {
 
     private final OtpCodeDao otpCodeDao;
     private final OtpConfigDao otpConfigDao;
+    private final Map<DeliveryChannel, NotificationService> notificationServices;
     private final SecureRandom random = new SecureRandom();
 
-    public OtpService(OtpCodeDao otpCodeDao, OtpConfigDao otpConfigDao) {
+    public OtpService(
+            OtpCodeDao otpCodeDao,
+            OtpConfigDao otpConfigDao,
+            Map<DeliveryChannel, NotificationService> notificationServices
+    ) {
         this.otpCodeDao = otpCodeDao;
         this.otpConfigDao = otpConfigDao;
+        this.notificationServices = notificationServices;
     }
 
     public OtpGenerateResponse generate(User user, OtpGenerateRequest request) {
         validateGenerateRequest(request);
+
+        DeliveryChannel deliveryChannel = parseDeliveryChannel(request.getDeliveryChannel());
 
         OtpConfig config = otpConfigDao.getConfig();
 
@@ -39,6 +50,14 @@ public class OtpService {
                 OtpStatus.ACTIVE,
                 expiresAt
         );
+
+        NotificationService notificationService = notificationServices.get(deliveryChannel);
+
+        if (notificationService == null) {
+            throw new IllegalArgumentException("Unsupported delivery channel: " + deliveryChannel);
+        }
+
+        notificationService.sendCode(user, request.getOperationId(), code);
 
         return new OtpGenerateResponse(
                 request.getOperationId(),
@@ -79,6 +98,10 @@ public class OtpService {
         if (request.getOperationId() == null || request.getOperationId().isBlank()) {
             throw new IllegalArgumentException("Operation id is required");
         }
+
+        if (request.getDeliveryChannel() == null || request.getDeliveryChannel().isBlank()) {
+            throw new IllegalArgumentException("Delivery channel is required");
+        }
     }
 
     private void validateOtpRequest(OtpValidateRequest request) {
@@ -92,6 +115,14 @@ public class OtpService {
 
         if (request.getCode() == null || request.getCode().isBlank()) {
             throw new IllegalArgumentException("OTP code is required");
+        }
+    }
+
+    private DeliveryChannel parseDeliveryChannel(String value) {
+        try {
+            return DeliveryChannel.valueOf(value.toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unknown delivery channel: " + value);
         }
     }
 

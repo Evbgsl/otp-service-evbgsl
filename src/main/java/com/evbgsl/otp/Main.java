@@ -9,7 +9,10 @@ import com.evbgsl.otp.api.UserHandler;
 import com.evbgsl.otp.dao.OtpCodeDao;
 import com.evbgsl.otp.dao.OtpConfigDao;
 import com.evbgsl.otp.dao.UserDao;
+import com.evbgsl.otp.model.DeliveryChannel;
 import com.evbgsl.otp.model.OtpConfig;
+import com.evbgsl.otp.notification.FileNotificationService;
+import com.evbgsl.otp.notification.NotificationService;
 import com.evbgsl.otp.service.AdminService;
 import com.evbgsl.otp.service.AuthService;
 import com.evbgsl.otp.service.ExpirationService;
@@ -18,24 +21,37 @@ import com.evbgsl.otp.service.TokenService;
 import com.evbgsl.otp.util.SchemaInitializer;
 import com.sun.net.httpserver.HttpServer;
 
+import java.util.Map;
+
 public class Main {
 
     public static void main(String[] args) throws Exception {
         SchemaInitializer.init();
 
         UserDao userDao = new UserDao();
-        OtpConfigDao otpConfigDao = new OtpConfigDao();
-        OtpCodeDao otpCodeDao = new OtpCodeDao();
 
+        OtpConfigDao otpConfigDao = new OtpConfigDao();
         OtpConfig config = otpConfigDao.getConfig();
 
         System.out.println("OTP config: length=" + config.getCodeLength()
                 + ", ttlSeconds=" + config.getTtlSeconds());
 
+        OtpCodeDao otpCodeDao = new OtpCodeDao();
+
         TokenService tokenService = new TokenService();
+
         AuthService authService = new AuthService(userDao, tokenService);
         AdminService adminService = new AdminService(userDao, otpConfigDao);
-        OtpService otpService = new OtpService(otpCodeDao, otpConfigDao);
+
+        Map<DeliveryChannel, NotificationService> notificationServices = Map.of(
+                DeliveryChannel.FILE, new FileNotificationService()
+        );
+
+        OtpService otpService = new OtpService(
+                otpCodeDao,
+                otpConfigDao,
+                notificationServices
+        );
 
         ExpirationService expirationService = new ExpirationService(otpCodeDao);
         expirationService.start();
