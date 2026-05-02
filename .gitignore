@@ -41,8 +41,9 @@ build/
 ### Mac OS ###
 .DS_Store
 
-
+# runtime
 otp-codes.txt
 
 # secrets
 src/main/resources/email.properties
+src/main/resources/telegram.properties

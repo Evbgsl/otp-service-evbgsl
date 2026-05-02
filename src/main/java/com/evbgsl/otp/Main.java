@@ -14,6 +14,7 @@ import com.evbgsl.otp.model.OtpConfig;
 import com.evbgsl.otp.notification.EmailNotificationService;
 import com.evbgsl.otp.notification.FileNotificationService;
 import com.evbgsl.otp.notification.NotificationService;
+import com.evbgsl.otp.notification.TelegramNotificationService;
 import com.evbgsl.otp.service.AdminService;
 import com.evbgsl.otp.service.AuthService;
 import com.evbgsl.otp.service.ExpirationService;
@@ -45,7 +46,8 @@ public class Main {
 
         Map<DeliveryChannel, NotificationService> notificationServices = Map.of(
                 DeliveryChannel.FILE, new FileNotificationService(),
-                DeliveryChannel.EMAIL, new EmailNotificationService()
+                DeliveryChannel.EMAIL, new EmailNotificationService(),
+                DeliveryChannel.TELEGRAM, new TelegramNotificationService()
         );
 
         OtpService otpService = new OtpService(
