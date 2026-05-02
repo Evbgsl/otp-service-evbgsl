@@ -1,8 +1,10 @@
 package com.evbgsl.otp;
 
+import com.evbgsl.otp.api.AdminHandler;
 import com.evbgsl.otp.api.AuthHandler;
 import com.evbgsl.otp.api.HealthHandler;
 import com.evbgsl.otp.api.HttpServerProvider;
+import com.evbgsl.otp.api.UserHandler;
 import com.evbgsl.otp.dao.OtpConfigDao;
 import com.evbgsl.otp.dao.UserDao;
 import com.evbgsl.otp.model.OtpConfig;
@@ -23,6 +25,7 @@ public class Main {
                 + ", ttlSeconds=" + config.getTtlSeconds());
 
         UserDao userDao = new UserDao();
+
         TokenService tokenService = new TokenService();
         AuthService authService = new AuthService(userDao, tokenService);
 
@@ -31,8 +34,12 @@ public class Main {
         HttpServer server = HttpServerProvider.create(port);
 
         server.createContext("/health", new HealthHandler());
+
         server.createContext("/api/auth/register", new AuthHandler(authService));
         server.createContext("/api/auth/login", new AuthHandler(authService));
+
+        server.createContext("/api/user/profile", new UserHandler(tokenService));
+        server.createContext("/api/admin/users", new AdminHandler(tokenService));
 
         server.start();
 

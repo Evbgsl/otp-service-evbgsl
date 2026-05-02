@@ -43,12 +43,18 @@ public class TokenService {
         return authToken.getUser();
     }
 
-    public void requireRole(String token, Role requiredRole) {
+    public User requireAuth(String token) {
+        return getUserByToken(token);
+    }
+
+    public User requireRole(String token, Role requiredRole) {
         User user = getUserByToken(token);
 
         if (user.getRole() != requiredRole) {
             throw new SecurityException("Access denied");
         }
+
+        return user;
     }
 
     public long getTokenTtlSeconds() {
