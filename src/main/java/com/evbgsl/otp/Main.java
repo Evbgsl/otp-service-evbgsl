@@ -1,0 +1,7 @@
+package com.evbgsl.otp;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("OTP Service started...");
+    }
+}
