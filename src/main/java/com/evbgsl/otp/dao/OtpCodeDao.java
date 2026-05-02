@@ -113,4 +113,22 @@ public class OtpCodeDao {
                 usedAt == null ? null : usedAt.toLocalDateTime()
         );
     }
+
+    public int markExpiredCodes() {
+        String sql = """
+            UPDATE otp_codes
+            SET status = 'EXPIRED'
+            WHERE status = 'ACTIVE'
+              AND expires_at <= CURRENT_TIMESTAMP
+            """;
+
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            return statement.executeUpdate();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to mark expired OTP codes", e);
+        }
+    }
 }
