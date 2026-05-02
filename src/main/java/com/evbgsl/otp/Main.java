@@ -7,6 +7,7 @@ import com.evbgsl.otp.dao.OtpConfigDao;
 import com.evbgsl.otp.dao.UserDao;
 import com.evbgsl.otp.model.OtpConfig;
 import com.evbgsl.otp.service.AuthService;
+import com.evbgsl.otp.service.TokenService;
 import com.evbgsl.otp.util.SchemaInitializer;
 import com.sun.net.httpserver.HttpServer;
 
@@ -22,7 +23,8 @@ public class Main {
                 + ", ttlSeconds=" + config.getTtlSeconds());
 
         UserDao userDao = new UserDao();
-        AuthService authService = new AuthService(userDao);
+        TokenService tokenService = new TokenService();
+        AuthService authService = new AuthService(userDao, tokenService);
 
         int port = 8080;
 
@@ -30,6 +32,7 @@ public class Main {
 
         server.createContext("/health", new HealthHandler());
         server.createContext("/api/auth/register", new AuthHandler(authService));
+        server.createContext("/api/auth/login", new AuthHandler(authService));
 
         server.start();
 

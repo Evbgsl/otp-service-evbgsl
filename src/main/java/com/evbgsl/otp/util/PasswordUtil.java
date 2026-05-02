@@ -25,4 +25,8 @@ public class PasswordUtil {
             throw new RuntimeException("Failed to hash password", e);
         }
     }
+
+    public static boolean matches(String rawPassword, String passwordHash) {
+        return hash(rawPassword).equals(passwordHash);
+    }
 }
