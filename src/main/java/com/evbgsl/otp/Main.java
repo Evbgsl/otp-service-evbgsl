@@ -14,6 +14,7 @@ import com.evbgsl.otp.model.OtpConfig;
 import com.evbgsl.otp.notification.EmailNotificationService;
 import com.evbgsl.otp.notification.FileNotificationService;
 import com.evbgsl.otp.notification.NotificationService;
+import com.evbgsl.otp.notification.SmsNotificationService;
 import com.evbgsl.otp.notification.TelegramNotificationService;
 import com.evbgsl.otp.service.AdminService;
 import com.evbgsl.otp.service.AuthService;
@@ -32,26 +33,33 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws Exception {
+
+        // --- Инициализация БД ---
         SchemaInitializer.init();
+        logger.info("Database schema initialized");
 
+        // --- DAO ---
         UserDao userDao = new UserDao();
-
         OtpConfigDao otpConfigDao = new OtpConfigDao();
-        OtpConfig config = otpConfigDao.getConfig();
-
-        System.out.println("OTP config: length=" + config.getCodeLength()
-                + ", ttlSeconds=" + config.getTtlSeconds());
-
         OtpCodeDao otpCodeDao = new OtpCodeDao();
 
+        // --- Конфигурация OTP ---
+        OtpConfig config = otpConfigDao.getConfig();
+        logger.info("OTP config loaded: length={}, ttlSeconds={}",
+                config.getCodeLength(),
+                config.getTtlSeconds());
+
+        // --- Сервисы ---
         TokenService tokenService = new TokenService();
         AuthService authService = new AuthService(userDao, tokenService);
         AdminService adminService = new AdminService(userDao, otpConfigDao);
 
+        // --- Notification services ---
         Map<DeliveryChannel, NotificationService> notificationServices = Map.of(
                 DeliveryChannel.FILE, new FileNotificationService(),
                 DeliveryChannel.EMAIL, new EmailNotificationService(),
-                DeliveryChannel.TELEGRAM, new TelegramNotificationService()
+                DeliveryChannel.TELEGRAM, new TelegramNotificationService(),
+                DeliveryChannel.SMS, new SmsNotificationService()
         );
 
         OtpService otpService = new OtpService(
@@ -60,13 +68,16 @@ public class Main {
                 notificationServices
         );
 
+        // --- Expiration worker ---
         ExpirationService expirationService = new ExpirationService(otpCodeDao);
         expirationService.start();
+        logger.info("OTP expiration service started");
 
+        // --- HTTP Server ---
         int port = 8080;
-
         HttpServer server = HttpServerProvider.create(port);
 
+        // --- Handlers ---
         server.createContext("/health", new HealthHandler());
 
         server.createContext("/api/auth/register", new AuthHandler(authService));
@@ -80,12 +91,8 @@ public class Main {
         server.createContext("/api/otp/generate", new OtpHandler(tokenService, otpService));
         server.createContext("/api/otp/validate", new OtpHandler(tokenService, otpService));
 
+        // --- Start server ---
         server.start();
-
-        logger.info("Database schema initialized");
-        logger.info("OTP config loaded: length={}, ttlSeconds={}",
-                config.getCodeLength(),
-                config.getTtlSeconds());
         logger.info("OTP Service started on port {}", port);
     }
 }

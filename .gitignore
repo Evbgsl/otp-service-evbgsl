@@ -48,3 +48,4 @@ otp-codes.txt
 # secrets
 src/main/resources/email.properties
 src/main/resources/telegram.properties
+src/main/resources/sms.properties
