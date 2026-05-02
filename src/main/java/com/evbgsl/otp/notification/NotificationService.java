@@ -4,5 +4,5 @@ import com.evbgsl.otp.model.User;
 
 public interface NotificationService {
 
-    void sendCode(User user, String operationId, String code);
+    void sendCode(User user, String operationId, String code, String destination);
 }

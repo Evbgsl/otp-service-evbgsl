@@ -11,6 +11,7 @@ import com.evbgsl.otp.dao.OtpConfigDao;
 import com.evbgsl.otp.dao.UserDao;
 import com.evbgsl.otp.model.DeliveryChannel;
 import com.evbgsl.otp.model.OtpConfig;
+import com.evbgsl.otp.notification.EmailNotificationService;
 import com.evbgsl.otp.notification.FileNotificationService;
 import com.evbgsl.otp.notification.NotificationService;
 import com.evbgsl.otp.service.AdminService;
@@ -39,12 +40,12 @@ public class Main {
         OtpCodeDao otpCodeDao = new OtpCodeDao();
 
         TokenService tokenService = new TokenService();
-
         AuthService authService = new AuthService(userDao, tokenService);
         AdminService adminService = new AdminService(userDao, otpConfigDao);
 
         Map<DeliveryChannel, NotificationService> notificationServices = Map.of(
-                DeliveryChannel.FILE, new FileNotificationService()
+                DeliveryChannel.FILE, new FileNotificationService(),
+                DeliveryChannel.EMAIL, new EmailNotificationService()
         );
 
         OtpService otpService = new OtpService(

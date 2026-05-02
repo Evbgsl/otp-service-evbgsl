@@ -14,7 +14,7 @@ public class FileNotificationService implements NotificationService {
     private static final Path FILE_PATH = Path.of("otp-codes.txt");
 
     @Override
-    public void sendCode(User user, String operationId, String code) {
+    public void sendCode(User user, String operationId, String code, String destination) {
         String line = String.format(
                 "[%s] userId=%d, login=%s, operationId=%s, code=%s%n",
                 LocalDateTime.now(),

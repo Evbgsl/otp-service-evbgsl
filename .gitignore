@@ -43,3 +43,6 @@ build/
 
 
 otp-codes.txt
+
+# secrets
+src/main/resources/email.properties
