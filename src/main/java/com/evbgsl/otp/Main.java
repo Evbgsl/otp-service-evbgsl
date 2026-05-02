@@ -4,12 +4,15 @@ import com.evbgsl.otp.api.AdminHandler;
 import com.evbgsl.otp.api.AuthHandler;
 import com.evbgsl.otp.api.HealthHandler;
 import com.evbgsl.otp.api.HttpServerProvider;
+import com.evbgsl.otp.api.OtpHandler;
 import com.evbgsl.otp.api.UserHandler;
+import com.evbgsl.otp.dao.OtpCodeDao;
 import com.evbgsl.otp.dao.OtpConfigDao;
 import com.evbgsl.otp.dao.UserDao;
 import com.evbgsl.otp.model.OtpConfig;
 import com.evbgsl.otp.service.AdminService;
 import com.evbgsl.otp.service.AuthService;
+import com.evbgsl.otp.service.OtpService;
 import com.evbgsl.otp.service.TokenService;
 import com.evbgsl.otp.util.SchemaInitializer;
 import com.sun.net.httpserver.HttpServer;
@@ -20,8 +23,9 @@ public class Main {
         SchemaInitializer.init();
 
         UserDao userDao = new UserDao();
-
         OtpConfigDao otpConfigDao = new OtpConfigDao();
+        OtpCodeDao otpCodeDao = new OtpCodeDao();
+
         OtpConfig config = otpConfigDao.getConfig();
 
         System.out.println("OTP config: length=" + config.getCodeLength()
@@ -30,6 +34,7 @@ public class Main {
         TokenService tokenService = new TokenService();
         AuthService authService = new AuthService(userDao, tokenService);
         AdminService adminService = new AdminService(userDao, otpConfigDao);
+        OtpService otpService = new OtpService(otpCodeDao, otpConfigDao);
 
         int port = 8080;
 
@@ -44,6 +49,9 @@ public class Main {
 
         server.createContext("/api/admin/users", new AdminHandler(tokenService, adminService));
         server.createContext("/api/admin/otp-config", new AdminHandler(tokenService, adminService));
+
+        server.createContext("/api/otp/generate", new OtpHandler(tokenService, otpService));
+        server.createContext("/api/otp/validate", new OtpHandler(tokenService, otpService));
 
         server.start();
 
